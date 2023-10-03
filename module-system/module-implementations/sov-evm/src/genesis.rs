@@ -35,20 +35,13 @@ impl<C: sov_modules_api::Context> Evm<C> {
         let mut spec = config
             .spec
             .iter()
-            .map(|(k, v)| {
-                // https://github.com/Sovereign-Labs/sovereign-sdk/issues/912
-                if *v == SpecId::CANCUN {
-                    panic!("Cancun is not supported");
-                }
-
-                (*k, *v)
-            })
+            .map(|(k, v)| (*k, *v))
             .collect::<Vec<_>>();
 
         spec.sort_by(|a, b| a.0.cmp(&b.0));
 
         if spec.is_empty() {
-            spec.push((0, SpecId::SHANGHAI));
+            spec.push((0, SpecId::LATEST));
         } else if spec[0].0 != 0u64 {
             panic!("EVM spec must start from block 0");
         }
@@ -84,8 +77,6 @@ impl<C: sov_modules_api::Context> Evm<C> {
             nonce: 0,
             base_fee_per_gas: Some(config.starting_base_fee),
             extra_data: Bytes::default(),
-            // EIP-4844 related fields
-            // https://github.com/Sovereign-Labs/sovereign-sdk/issues/912
             blob_gas_used: None,
             excess_blob_gas: None,
             // EIP-4788 related field

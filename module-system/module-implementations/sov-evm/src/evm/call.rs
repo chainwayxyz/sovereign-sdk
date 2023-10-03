@@ -19,8 +19,6 @@ pub(crate) struct CallFees {
     /// `maxFeePerGas` for EIP-1559
     gas_price: U256,
     /// Max Fee per Blob gas for EIP-4844 transactions
-    // https://github.com/Sovereign-Labs/sovereign-sdk/issues/912
-    #[allow(dead_code)]
     max_fee_per_blob_gas: Option<U256>,
 }
 
@@ -139,24 +137,27 @@ pub(crate) fn prepare_call_env(block_env: &BlockEnv, request: CallRequest) -> Et
         nonce,
         access_list,
         chain_id,
+        blob_versioned_hashes,
+        max_fee_per_blob_gas,
         ..
     } = request;
 
     let CallFees {
         max_priority_fee_per_gas,
         gas_price,
-        // https://github.com/Sovereign-Labs/sovereign-sdk/issues/912
-        max_fee_per_blob_gas: _,
+        max_fee_per_blob_gas,
     } = CallFees::ensure_fees(
         gas_price,
         max_fee_per_gas,
         max_priority_fee_per_gas,
         U256::from(block_env.basefee),
         // EIP-4844 related fields
-        // https://github.com/Sovereign-Labs/sovereign-sdk/issues/912
-        None,
-        None,
-        None,
+        Some(blob_versioned_hashes.as_slice()),
+        max_fee_per_blob_gas,
+        block_env
+            .blob_excess_gas_and_price
+            .map(|b| b.blob_gasprice)
+            .map(U256::from),
     )?;
 
     let gas_limit = gas.unwrap_or(U256::from(block_env.gas_limit.min(u64::MAX)));

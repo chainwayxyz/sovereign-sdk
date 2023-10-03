@@ -62,10 +62,8 @@ fn simple_contract_execution<DB: Database<Error = Infallible> + DatabaseCommit +
 
     let contract = SimpleStorageContract::default();
 
-    // We are not supporting CANCUN yet
-    // https://github.com/Sovereign-Labs/sovereign-sdk/issues/912
     let mut cfg_env = CfgEnv::default();
-    cfg_env.spec_id = SpecId::SHANGHAI;
+    cfg_env.spec_id = SpecId::LATEST;
 
     let contract_address: B160 = {
         let tx = dev_signer

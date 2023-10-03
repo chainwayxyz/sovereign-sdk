@@ -115,7 +115,7 @@ mod experimental {
                 data: vec![],
                 chain_id: 1,
                 limit_contract_code_size: None,
-                spec: vec![(0, SpecId::SHANGHAI)].into_iter().collect(),
+                spec: vec![(0, SpecId::LATEST)].into_iter().collect(),
                 coinbase: Address::zero(),
                 starting_base_fee: reth_primitives::constants::MIN_PROTOCOL_BASE_FEE,
                 block_gas_limit: reth_primitives::constants::ETHEREUM_BLOCK_GAS_LIMIT,

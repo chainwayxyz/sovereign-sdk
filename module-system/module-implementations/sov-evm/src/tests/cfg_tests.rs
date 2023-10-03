@@ -13,7 +13,7 @@ fn cfg_test() {
 
     let cfg = EvmChainConfig {
         limit_contract_code_size: Some(100),
-        spec: vec![(0, SpecId::SHANGHAI)].into_iter().collect(),
+        spec: vec![(0, SpecId::LATEST)].into_iter().collect(),
         ..Default::default()
     };
 
@@ -26,7 +26,7 @@ fn cfg_test() {
     let mut expected_cfg_env = CfgEnv::default();
     expected_cfg_env.chain_id = 1;
     expected_cfg_env.disable_base_fee = true;
-    expected_cfg_env.spec_id = SpecId::SHANGHAI;
+    expected_cfg_env.spec_id = SpecId::LATEST;
     expected_cfg_env.limit_contract_code_size = Some(100);
 
     assert_eq!(cfg_env, expected_cfg_env,);

@@ -23,7 +23,7 @@ lazy_static! {
             code: Bytes::default(),
             nonce: 0,
         }],
-        spec: vec![(0, SpecId::BERLIN), (1, SpecId::SHANGHAI)]
+        spec: vec![(0, SpecId::BERLIN), (1, SpecId::LATEST)]
             .into_iter()
             .collect(),
         chain_id: 1000,
@@ -88,7 +88,7 @@ fn genesis_cfg() {
     assert_eq!(
         cfg,
         EvmChainConfig {
-            spec: vec![(0, SpecId::BERLIN), (1, SpecId::SHANGHAI)],
+            spec: vec![(0, SpecId::BERLIN), (1, SpecId::LATEST)],
             chain_id: 1000,
             block_gas_limit: reth_primitives::constants::ETHEREUM_BLOCK_GAS_LIMIT,
             block_timestamp_delta: 2,
@@ -104,25 +104,6 @@ fn genesis_cfg() {
 fn genesis_cfg_missing_specs() {
     get_evm(&EvmConfig {
         spec: vec![(5, SpecId::BERLIN)].into_iter().collect(),
-        ..Default::default()
-    });
-}
-
-#[test]
-fn genesis_empty_spec_defaults_to_shanghai() {
-    let mut config = TEST_CONFIG.clone();
-    config.spec.clear();
-    let (evm, mut working_set) = get_evm(&config);
-
-    let cfg = evm.cfg.get(&mut working_set).unwrap();
-    assert_eq!(cfg.spec, vec![(0, SpecId::SHANGHAI)]);
-}
-
-#[test]
-#[should_panic(expected = "Cancun is not supported")]
-fn genesis_cfg_cancun() {
-    get_evm(&EvmConfig {
-        spec: vec![(0, SpecId::CANCUN)].into_iter().collect(),
         ..Default::default()
     });
 }

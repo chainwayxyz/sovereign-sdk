@@ -30,6 +30,7 @@ fn begin_slot_hook_creates_pending_block() {
             prevrandao: *DA_ROOT_HASH,
             basefee: 62u64,
             gas_limit: TEST_CONFIG.block_gas_limit,
+            blob_excess_gas_and_price: None,
         }
     );
 }

@@ -128,7 +128,7 @@ fn get_evm_config(genesis_addresses: Vec<reth_primitives::Address>) -> EvmConfig
         data,
         chain_id: 1,
         limit_contract_code_size: None,
-        spec: vec![(0, SpecId::SHANGHAI)].into_iter().collect(),
+        spec: vec![(0, SpecId::LATEST)].into_iter().collect(),
         block_timestamp_delta: 1u64,
         ..Default::default()
     }

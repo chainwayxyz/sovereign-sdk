@@ -32,6 +32,7 @@ where
                 .next_block_base_fee(cfg.base_fee_params)
                 .unwrap(),
             gas_limit: cfg.block_gas_limit,
+            blob_excess_gas_and_price: None,
         };
         self.block_env.set(&new_pending_env, working_set);
     }
@@ -70,6 +71,15 @@ where
             .last()
             .map_or(0u64, |tx| tx.receipt.receipt.cumulative_gas_used);
 
+        let blob_gas_used = pending_transactions.iter().fold(0u64, |acc, tx| {
+            acc + tx
+                .transaction
+                .signed_transaction
+                .transaction
+                .blob_gas_used()
+                .unwrap_or_default()
+        });
+
         let transactions: Vec<&reth_primitives::TransactionSigned> = pending_transactions
             .iter()
             .map(|tx| &tx.transaction.signed_transaction)
@@ -104,9 +114,10 @@ where
             base_fee_per_gas: parent_block.header.next_block_base_fee(cfg.base_fee_params),
             extra_data: Bytes::default(),
             // EIP-4844 related fields
-            // https://github.com/Sovereign-Labs/sovereign-sdk/issues/912
-            blob_gas_used: None,
-            excess_blob_gas: None,
+            blob_gas_used: Some(blob_gas_used),
+            excess_blob_gas: block_env
+                .blob_excess_gas_and_price
+                .map(|b| b.excess_blob_gas),
             // EIP-4788 related field
             // unrelated for rollups
             parent_beacon_block_root: None,

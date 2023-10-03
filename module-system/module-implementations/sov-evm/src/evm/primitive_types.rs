@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 use reth_primitives::{Address, Header, SealedHeader, TransactionSigned, H256};
-use revm::primitives::EVMError;
+use revm::primitives::{BlobExcessGasAndPrice, EVMError};
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, PartialEq, Clone)]
 pub(crate) struct BlockEnv {
@@ -13,6 +13,8 @@ pub(crate) struct BlockEnv {
     /// basefee is added in EIP1559 London upgrade
     pub(crate) basefee: u64,
     pub(crate) gas_limit: u64,
+    /// blob_excess_gas_and_price is added in EIP-4844
+    pub(crate) blob_excess_gas_and_price: Option<BlobExcessGasAndPrice>,
 }
 
 impl Default for BlockEnv {
@@ -24,7 +26,39 @@ impl Default for BlockEnv {
             prevrandao: Default::default(),
             basefee: Default::default(),
             gas_limit: reth_primitives::constants::ETHEREUM_BLOCK_GAS_LIMIT,
+            blob_excess_gas_and_price: None,
         }
+    }
+}
+
+impl BlockEnv {
+    /// Takes `blob_excess_gas` saves it inside env
+    /// and calculates `blob_fee` with [`BlobGasAndFee`].
+    pub fn set_blob_excess_gas_and_price(&mut self, excess_blob_gas: u64) {
+        self.blob_excess_gas_and_price = Some(BlobExcessGasAndPrice::new(excess_blob_gas));
+    }
+    /// See [EIP-4844] and [`crate::calc_blob_gasprice`].
+    ///
+    /// Returns `None` if `Cancun` is not enabled. This is enforced in [`Env::validate_block_env`].
+    ///
+    /// [EIP-4844]: https://eips.ethereum.org/EIPS/eip-4844
+    #[inline]
+    pub fn get_blob_gasprice(&self) -> Option<u128> {
+        self.blob_excess_gas_and_price
+            .as_ref()
+            .map(|a| a.blob_gasprice)
+    }
+
+    /// Return `blob_excess_gas` header field. See [EIP-4844].
+    ///
+    /// Returns `None` if `Cancun` is not enabled. This is enforced in [`Env::validate_block_env`].
+    ///
+    /// [EIP-4844]: https://eips.ethereum.org/EIPS/eip-4844
+    #[inline]
+    pub fn get_blob_excess_gas(&self) -> Option<u64> {
+        self.blob_excess_gas_and_price
+            .as_ref()
+            .map(|a| a.excess_blob_gas)
     }
 }
 
@@ -38,6 +72,9 @@ impl From<&SealedBlock> for BlockEnv {
             prevrandao: block.header.mix_hash,
             basefee: block.header.base_fee_per_gas.unwrap_or_default(),
             gas_limit: block.header.gas_limit,
+            blob_excess_gas_and_price: Some(BlobExcessGasAndPrice::new(
+                block.header.excess_blob_gas.unwrap_or_default(),
+            )),
         }
     }
 }

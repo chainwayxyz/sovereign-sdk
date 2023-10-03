@@ -3,6 +3,7 @@ use std::array::TryFromSliceError;
 use ethereum_types::U64;
 use jsonrpsee::core::RpcResult;
 use reth_primitives::contract::create_address;
+use reth_primitives::eip4844::calc_blob_gasprice;
 use reth_primitives::TransactionKind::{Call, Create};
 use reth_primitives::{TransactionSignedEcRecovered, U128, U256};
 use revm::primitives::{
@@ -580,8 +581,7 @@ fn get_cfg_env_template() -> revm::primitives::CfgEnv {
     cfg_env.disable_eip3607 = true;
     cfg_env.disable_base_fee = true;
     cfg_env.chain_id = 0;
-    // https://github.com/Sovereign-Labs/sovereign-sdk/issues/912
-    cfg_env.spec_id = revm::primitives::SpecId::SHANGHAI;
+    cfg_env.spec_id = revm::primitives::SpecId::LATEST;
     cfg_env.perf_analyse_created_bytecodes = revm::primitives::AnalysisKind::Analyse;
     cfg_env.limit_contract_code_size = None;
     cfg_env
@@ -615,9 +615,12 @@ pub(crate) fn build_rpc_receipt(
         cumulative_gas_used: U256::from(receipt.receipt.cumulative_gas_used),
         gas_used: Some(U256::from(receipt.gas_used)),
         // EIP-4844 related
-        // https://github.com/Sovereign-Labs/sovereign-sdk/issues/912
-        blob_gas_used: None,
-        blob_gas_price: None,
+        blob_gas_used: transaction.blob_gas_used().map(U128::from),
+        blob_gas_price: block
+            .header
+            .excess_blob_gas
+            .map(calc_blob_gasprice)
+            .map(U128::from),
         contract_address: match transaction_kind {
             Create => Some(create_address(transaction.signer(), transaction.nonce())),
             Call(_) => None,
